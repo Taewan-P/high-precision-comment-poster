@@ -35,7 +35,7 @@ def update_time(loc='time.nist.gov'):
 
         # If OS is Linux
         elif os_name == 'linux' or os_name == 'linux2':
-            os.system(f'sudo ntpdate {loc}')
+            os.system(f'sudo sntp -sS {loc}')
         
         else:
             print('OS not supported')

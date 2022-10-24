@@ -6,14 +6,14 @@ import time
 from datetime import datetime
 
 # Get the current time from the NTP server
-def get_time(server_address='time.nist.gov'):
+def get_time(server_address='time.google.com'):
     c = ntplib.NTPClient()
     response = c.request(server_address, version=3)
     return datetime.fromtimestamp(response.tx_time)
 
 
 # Update the system time to the NTP server time
-def update_time(loc='time.nist.gov'):
+def update_time(loc='time.google.com'):
     os_name = sys.platform
     try:
         # If OS is Windows

@@ -1,7 +1,9 @@
+from bs4 import BeautifulSoup
 import ntplib
 import os
 import sys
 import time
+import requests
 
 from datetime import datetime
 
@@ -46,6 +48,18 @@ def update_time(loc='time.google.com'):
         sys.exit(1)
     else:
         print('System time updated successfully')
+
+
+# Get GRP ID from the cafe link (Daum Cafe Only)
+def get_grp_id(cafe_link: str) -> str:
+    session = requests.Session()
+    res = session.get(cafe_link)
+
+    bs = BeautifulSoup(res.text, 'html.parser')
+    query = bs.find("meta", property="og:url")['content'].split('/')[-1]
+    result = query.split('=')[-1]
+
+    return result
 
 
 

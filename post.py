@@ -263,13 +263,18 @@ def main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, deb
 
 
 if __name__ == '__main__':
-    CAFE_URL = 'https://cafe.daum.net/LeeChaeYeon'
-
     with open('secret.json', 'r') as file:
         secret = json.load(file)
 
+    CAFE_URL = secret['cafe']['url']
+    CAFE_BOARD_ID = secret['cafe']['board']
     login_info = (secret['login']['id'], secret['login']['pw'])
     user_info = (secret['info']['name'], secret['info']
                  ['birthday'], secret['info']['phone'])
 
-    main(CAFE_URL, login_info, user_info, 'ZZqu', debug=True, sec=False)
+    try:
+        main(CAFE_URL, login_info, user_info, CAFE_BOARD_ID, debug=True, sec=False)
+    except Exception as e:
+        print(e)
+        input("Press any key to exit...")
+        sys.exit(1)

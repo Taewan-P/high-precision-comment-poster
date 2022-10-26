@@ -219,9 +219,13 @@ def write_comment(d: webdriver.Chrome, cafe_id: str, board_id: str, token: str, 
         'texticonyn': 'N'
     }
 
-    r = requests.post(memo_link, cookies=cookies, headers=headers, data=form_data)
+    request_start_time = time.time()
+    r = requests.post(memo_link, cookies=cookies,
+                      headers=headers, data=form_data)
+    request_end_time = time.time()
 
     if r.status_code == 200 or r.status_code == 302:
+        print(f"Comment post request performance: {request_end_time - request_start_time} seconds, response returned at {datetime.fromtimestamp(request_end_time).strftime('%H:%M:%S.%f')}")
         return True
     else:
         print(f"Error code: {r.status_code}")

@@ -258,6 +258,14 @@ def main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, deb
         print("Failure!")
 
 
-
 if __name__ == '__main__':
-    update_time()
+    CAFE_URL = 'https://cafe.daum.net/LeeChaeYeon'
+
+    with open('secret.json', 'r') as file:
+        secret = json.load(file)
+
+    login_info = (secret['login']['id'], secret['login']['pw'])
+    user_info = (secret['info']['name'], secret['info']
+                 ['birthday'], secret['info']['phone'])
+
+    main(CAFE_URL, login_info, user_info, 'ZZqu', debug=True, sec=False)

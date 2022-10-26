@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import json
 import ntplib
 import os
 import platform
@@ -87,13 +88,29 @@ def get_grp_id(cafe_link: str) -> str:
     return result
 
 
-# Get fld ID <- from the user
+# Get memo page token
+def get_memo_token(d: webdriver.Chrome) -> str:
+    # This function must be executed in memo input page. Otherwise it will not work!
+    d.switch_to.frame('down')
+    html = d.page_source
+    bs = BeautifulSoup(html, 'html.parser')
+    scripts = bs.find_all('script')
+    for script in scripts:
+        if 'token' in script.text:
+            token = script.text.split('token: ')[1].split(',')[0].replace("'", '')
+            return token
+    return ''
 
 
 # Webdriver Functions
 def open_browser() -> webdriver.Chrome:
+    options = webdriver.ChromeOptions()
+    options.add_argument('User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                        'Chrome/104.0.5112.81 Safari/537.36')
+    options.add_experimental_option("detach", True)
+    options.add_argument('--lang=ko_KR')
     service = ChromeService(executable_path=ChromeDriverManager().install())
-    return webdriver.Chrome(service=service)
+    return webdriver.Chrome(service=service, options=options)
 
 
 def quit_browser(d: webdriver.Chrome) -> bool:
@@ -117,7 +134,6 @@ def goto_url(d: webdriver.Chrome, url: str) -> bool:
 
 # Login to the cafe with Kakao ID
 def login(d: webdriver.Chrome, cafe_link: str, id: str, pw: str) -> bool:
-    print("- Login Sequence -")
     url_encoded = urllib.parse.quote(cafe_link)
     url = f"https://accounts.kakao.com/login?continue=https%3A%2F%2Flogins.daum.net%2Faccounts%2Fksso.do%3Frescue%3Dtrue%26url%3D{url_encoded}"
     goto_url(d, url)
@@ -151,8 +167,97 @@ def login(d: webdriver.Chrome, cafe_link: str, id: str, pw: str) -> bool:
         return False
     
 
-def generate_comment(name: str, birthday: str, phone_number: str) -> str:
+def generate_comment(name: str, birthday: str, phone_number: str, debug=True) -> str:
+    if debug is True:
+        return "오늘도 화이팅!!"
+
     return f"[ {name} / {birthday} / {phone_number} ]"
+
+
+def write_comment(d: webdriver.Chrome, cafe_id: str, board_id: str, token: str, comment: str, sec=True) -> bool:
+    d.switch_to.default_content()
+    memo_link = f"https://cafe.daum.net/_c21_/memo_action?act=write&grpid={cafe_id}&fldid={board_id}"
+
+    cookies = {}
+    for cookie in d.get_cookies():
+        name = cookie.get('name', '')
+        value = cookie.get('value', None)
+
+        if name != "" and value is not None:
+            cookies[name] = value
+
+    headers = {
+        'referer': memo_link,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                        'Chrome/104.0.5112.81 Safari/537.36 ',
+        'sec-ch-ua-platform': 'Windows',
+        'sec-ch-ua-mobile': '?0',
+        'sec-fetch-dest': 'iframe',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'origin': 'https://cafe.daum.net',
+        'dnt': '1',
+        'content-type': 'application/x-www-form-urlencoded',
+        'accept-language': 'ko,en-US;q=0.9,en;q=0.8',
+        'accept-enconding': 'gzip, deflate, br',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
+    }
+
+    form_data = {
+        'token': token,
+        'content': comment,
+        'imageurl': None,
+        'imagesize': None,
+        'imagename': None,
+        'hideyn': 'Y' if sec else 'N',
+        'noticeyn': 'N',
+        'mustreadnoti': 'N',
+        'listnum': 20,
+        'fontproperties': '{"bold": false, "color": ""}',
+        'texticonyn': 'N'
+    }
+
+    r = requests.post(memo_link, cookies=cookies, headers=headers, data=form_data)
+
+    if r.status_code == 200 or r.status_code == 302:
+        return True
+    else:
+        print(f"Error code: {r.status_code}")
+
+    return False
+
+
+
+def main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, debug: bool, sec: bool):
+    kid, kpw = login_info
+    name, birthday, phone_number = user_info
+    cafe_id = get_grp_id(cafe_link)
+    comment = generate_comment(name, birthday, phone_number, debug=debug)
+
+    d = open_browser()
+
+    login(d, cafe_link, kid, kpw)
+    time.sleep(1)
+    goto_url(d, f"{cafe_link}/{board_id}")
+    d.implicitly_wait(3)
+    token = get_memo_token(d)
+
+    if token == '':
+        raise Exception("Invalid Token Exception")
+    else:
+        print("Token is valid. Ready to write comment.")
+
+    result = write_comment(d, cafe_id, board_id, token, comment, sec=sec)
+
+    if result is True:
+        print("Success. Check your comments.")
+        goto_url(d, f"{cafe_link}/{board_id}")
+    else:
+        print("Failure!")
+
+
 
 if __name__ == '__main__':
     update_time()

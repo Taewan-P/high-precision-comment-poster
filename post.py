@@ -24,7 +24,7 @@ def copy_input(driver: webdriver.Chrome, xpath: str, input: str) -> None:
     os_base = platform.system()
     pyperclip.copy(input)
     driver.find_element(By.XPATH, xpath).click()
-    
+
     # Paste Clipboard
     if os_base == 'Darwin':
         ActionChains(driver).key_down(Keys.COMMAND).send_keys('v').key_up(Keys.COMMAND).perform()
@@ -55,7 +55,8 @@ def update_time(loc='time.google.com'):
             print('Updating system time to: ' + str(current_time))
             time_string = current_time.strftime('%Y-%m-%d %H:%M:%S')
 
-            win32api.SetSystemTime(current_time.year, current_time.month, 0, current_time.day, current_time.hour, current_time.minute, current_time.second, 0)
+            win32api.SetSystemTime(current_time.year, current_time.month, 0, current_time.day,
+                                   current_time.hour, current_time.minute, current_time.second, 0)
 
         # If OS is MacOS
         elif os_name == 'darwin':
@@ -64,7 +65,7 @@ def update_time(loc='time.google.com'):
         # If OS is Linux
         elif os_name == 'linux' or os_name == 'linux2':
             os.system(f'sudo sntp -sS {loc}')
-        
+
         else:
             print('OS not supported')
             sys.exit(1)
@@ -106,7 +107,7 @@ def get_memo_token(d: webdriver.Chrome) -> str:
 def open_browser() -> webdriver.Chrome:
     options = webdriver.ChromeOptions()
     options.add_argument('User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                        'Chrome/104.0.5112.81 Safari/537.36')
+                         'Chrome/104.0.5112.81 Safari/537.36')
     options.add_experimental_option("detach", True)
     options.add_argument('--lang=ko_KR')
     service = ChromeService(executable_path=ChromeDriverManager().install())
@@ -137,12 +138,12 @@ def login(d: webdriver.Chrome, cafe_link: str, id: str, pw: str) -> bool:
     url_encoded = urllib.parse.quote(cafe_link)
     url = f"https://accounts.kakao.com/login?continue=https%3A%2F%2Flogins.daum.net%2Faccounts%2Fksso.do%3Frescue%3Dtrue%26url%3D{url_encoded}"
     goto_url(d, url)
-    
+
     copy_input(d, '//*[@id="loginEmailField"]/div', id)
     copy_input(d, '//*[@id="login-form"]/fieldset/div[3]', pw)
 
     ActionChains(d).key_down(Keys.ENTER).key_up(Keys.ENTER).perform()
-    
+
     # Check if URL has changed
     i = 0
     try:
@@ -165,7 +166,7 @@ def login(d: webdriver.Chrome, cafe_link: str, id: str, pw: str) -> bool:
     except Exception as e:
         print(e)
         return False
-    
+
 
 def generate_comment(name: str, birthday: str, phone_number: str, debug=True) -> str:
     if debug is True:
@@ -231,7 +232,6 @@ def write_comment(d: webdriver.Chrome, cafe_id: str, board_id: str, token: str, 
         print(f"Error code: {r.status_code}")
 
     return False
-
 
 
 def main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, debug: bool, sec: bool):

@@ -368,7 +368,7 @@ def form_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str
 
 
 if __name__ == '__main__':
-    with open('secret.json', 'r') as file:
+    with open('secret.json', 'r', encoding='UTF8') as file:
         secret = json.load(file)
 
     CAFE_URL = secret['cafe']['url']

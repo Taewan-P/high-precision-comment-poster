@@ -239,7 +239,8 @@ def write_comment(d: webdriver.Chrome, cafe_id: str, board_id: str, token: str, 
     return False
 
 
-def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, name: str, birthday: str, phone_number: str) -> bool:
+def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, my_name: str, birthday: str,
+                     phone_number: str) -> bool:
     form_link = f"https://cafe.daum.net/_c21_/founder_apply_format?grpid={cafe_id}&fldid={board_id}&type=new"
     cookies = {}
     for cookie in d.get_cookies():
@@ -267,7 +268,7 @@ def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, name: str
     }
 
     payload = [
-        {"questionId": 3220, "answer": name},
+        {"questionId": 3220, "answer": my_name},
         {"questionId": 3221, "answer": birthday},
         {"questionId": 3222, "answer": phone_number},
     ]

@@ -265,9 +265,9 @@ def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, name: str
     }
 
     payload = [
-        {"questionId": 3200, "answer": name},
-        {"questionId": 3201, "answer": birthday},
-        {"questionId": 3202, "answer": phone_number},
+        {"questionId": 3220, "answer": name},
+        {"questionId": 3221, "answer": birthday},
+        {"questionId": 3222, "answer": phone_number},
     ]
 
     request_link = f"https://cafe.daum.net/_c21_/api/apply/article/{cafe_id}/{board_id}"

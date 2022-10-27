@@ -1,22 +1,22 @@
-from bs4 import BeautifulSoup
 import json
-import ntplib
 import os
 import platform
-import pyperclip
 import sys
 import time
 import urllib
-import requests
-
-
 from datetime import datetime
+from datetime import timezone
+
+import ntplib
+import pyperclip
+import requests
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 # Copy and Paste function
@@ -51,13 +51,14 @@ def update_time(loc='time.google.com'):
 
             # Get the current time from the NTP server
             current_time = get_time(loc)
+            utc_timestamp = current_time.replace(tzinfo=timezone.utc)
 
             # Update the system time
             print('Updating system time to: ' + str(current_time))
             time_string = current_time.strftime('%Y-%m-%d %H:%M:%S')
 
-            win32api.SetSystemTime(current_time.year, current_time.month, 0, current_time.day,
-                                   current_time.hour, current_time.minute, current_time.second, 0)
+            win32api.SetSystemTime(utc_timestamp.year, utc_timestamp.month, 0, utc_timestamp.day,
+                                   utc_timestamp.hour, utc_timestamp.minute, utc_timestamp.second, 0)
 
         # If OS is MacOS
         elif os_name == 'darwin':
@@ -102,7 +103,7 @@ def get_memo_token(d: webdriver.Chrome) -> str:
             token = script.text.split('token: ')[1].split(',')[0].replace("'", '')
             d.switch_to.default_content()
             return token
-    
+
     d.switch_to.default_content()
     return ''
 
@@ -193,7 +194,7 @@ def write_comment(d: webdriver.Chrome, cafe_id: str, board_id: str, token: str, 
     headers = {
         'referer': memo_link,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                        'Chrome/104.0.5112.81 Safari/537.36 ',
+                      'Chrome/104.0.5112.81 Safari/537.36 ',
         'sec-ch-ua-platform': 'Windows',
         'sec-ch-ua-mobile': '?0',
         'sec-fetch-dest': 'iframe',
@@ -229,7 +230,8 @@ def write_comment(d: webdriver.Chrome, cafe_id: str, board_id: str, token: str, 
     request_end_time = time.time()
 
     if r.status_code == 200 or r.status_code == 302:
-        print(f"Comment post request performance: {request_end_time - request_start_time} seconds, response returned at {datetime.fromtimestamp(request_end_time).strftime('%H:%M:%S.%f')}")
+        print(
+            f"Comment post request performance: {request_end_time - request_start_time} seconds, response returned at {datetime.fromtimestamp(request_end_time).strftime('%H:%M:%S.%f')}")
         return True
     else:
         print(f"Error code: {r.status_code}")
@@ -250,7 +252,7 @@ def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, name: str
     headers = {
         'referer': form_link,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                        'Chrome/104.0.5112.81 Safari/537.36 ',
+                      'Chrome/104.0.5112.81 Safari/537.36 ',
         'sec-ch-ua-platform': 'Windows',
         'sec-ch-ua-mobile': '?0',
         'sec-fetch-dest': 'empty',
@@ -274,11 +276,13 @@ def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, name: str
 
     request_start_time = time.time()
     r = requests.post(request_link, cookies=cookies,
-                        headers=headers, json=payload)
+                      headers=headers, json=payload)
     request_end_time = time.time()
 
     if r.status_code == 200:
-        print(f"Form post request performance: {request_end_time - request_start_time} seconds, response returned at {datetime.fromtimestamp(request_end_time).strftime('%H:%M:%S.%f')}")
+        print("")
+        print(
+            f"Form post request performance: {request_end_time - request_start_time} seconds, response returned at {datetime.fromtimestamp(request_end_time).strftime('%H:%M:%S.%f')}")
         result = r.json()
         timestamp = result.get('config', {}).get('regDate', 0)
         converted_timestamp = datetime.fromtimestamp(timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S.%f')
@@ -287,7 +291,6 @@ def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, name: str
         return True
     else:
         print(f"Error code: {r.status_code}")
-
 
 
 def comment_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, debug: bool, sec: bool):
@@ -336,7 +339,6 @@ def form_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str
     print(f"Threshold: {threshold} ms")
     print(f"Expected execution time: {datetime.fromtimestamp(execution_time / 1000).strftime('%H:%M:%S.%f')}")
 
-
     while True:
         # Get time in milliseconds
         current_time = time.time_ns() // 1000000
@@ -347,6 +349,7 @@ def form_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str
             if result is True:
                 print("Success. Check your form.")
                 goto_url(d, f"{cafe_link}/{board_id}")
+                return
             else:
                 print("Failure!")
 
@@ -354,8 +357,6 @@ def form_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str
 
         sys.stdout.flush()
         time.sleep(0.01)
-        
-
 
     result = participate_form(d, cafe_id, board_id, name, birthday, phone_number)
 
@@ -374,7 +375,7 @@ if __name__ == '__main__':
     CAFE_BOARD_ID = secret['cafe']['board']
     login_info = (secret['login']['id'], secret['login']['pw'])
     user_info = (secret['info']['name'], secret['info']
-                 ['birthday'], secret['info']['phone'])
+    ['birthday'], secret['info']['phone'])
 
     try:
         # comment_main(CAFE_URL, login_info, user_info, CAFE_BOARD_ID, debug=True, sec=False)

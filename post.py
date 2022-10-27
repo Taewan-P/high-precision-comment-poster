@@ -377,7 +377,9 @@ if __name__ == '__main__':
                  ['birthday'], secret['info']['phone'])
 
     try:
-        main(CAFE_URL, login_info, user_info, CAFE_BOARD_ID, debug=True, sec=False)
+        # comment_main(CAFE_URL, login_info, user_info, CAFE_BOARD_ID, debug=True, sec=False)
+        update_time()
+        form_main(CAFE_URL, login_info, user_info, CAFE_BOARD_ID, 1666862100000, 150)
     except Exception as e:
         print(e)
         input("Press any key to exit...")

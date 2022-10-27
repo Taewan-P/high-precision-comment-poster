@@ -42,6 +42,7 @@ def get_time(server_address='time.google.com'):
 
 # Update the system time to the NTP server time
 def update_time(loc='time.google.com'):
+    print("Updating system time from Stratum 1 NTP server...")
     os_name = sys.platform
     try:
         # If OS is Windows
@@ -99,7 +100,10 @@ def get_memo_token(d: webdriver.Chrome) -> str:
     for script in scripts:
         if 'token' in script.text:
             token = script.text.split('token: ')[1].split(',')[0].replace("'", '')
+            d.switch_to.default_content()
             return token
+    
+    d.switch_to.default_content()
     return ''
 
 
@@ -148,19 +152,19 @@ def login(d: webdriver.Chrome, cafe_link: str, id: str, pw: str) -> bool:
     i = 0
     try:
         while True:
-            sys.stdout.write(f"Waiting for login progress to be finished{'.' * (i % 3 + 1)} \r")
+            sys.stdout.write(f"\rWaiting for login progress to be finished{'.' * (i % 3 + 1)}")
             if d.current_url == cafe_link:
                 sys.stdout.flush()
-                sys.stdout.write("Waiting for login progress to be finished... Done.\n")
+                sys.stdout.write("\rWaiting for login progress to be finished... Done.\n")
                 return True
 
             if i > 300:
                 sys.stdout.flush()
-                sys.stdout.write("Waiting for login progress to be finished... Failed.\n")
+                sys.stdout.write("\rWaiting for login progress to be finished... Failed.\n")
                 return False
             time.sleep(1)
             sys.stdout.flush()
-            sys.stdout.write("                                                              \r")
+            sys.stdout.write("\r                                                              ")
             sys.stdout.flush()
             i += 1
     except Exception as e:
@@ -176,7 +180,6 @@ def generate_comment(name: str, birthday: str, phone_number: str, debug=True) ->
 
 
 def write_comment(d: webdriver.Chrome, cafe_id: str, board_id: str, token: str, comment: str, sec=True) -> bool:
-    d.switch_to.default_content()
     memo_link = f"https://cafe.daum.net/_c21_/memo_action?act=write&grpid={cafe_id}&fldid={board_id}"
 
     cookies = {}

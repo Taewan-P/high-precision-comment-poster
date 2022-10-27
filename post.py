@@ -237,7 +237,60 @@ def write_comment(d: webdriver.Chrome, cafe_id: str, board_id: str, token: str, 
     return False
 
 
-def main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, debug: bool, sec: bool):
+def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, name: str, birthday: str, phone_number: str) -> bool:
+    form_link = f"https://cafe.daum.net/_c21_/founder_apply_format?grpid={cafe_id}&fldid={board_id}&type=new"
+    cookies = {}
+    for cookie in d.get_cookies():
+        name = cookie.get('name', '')
+        value = cookie.get('value', None)
+
+        if name != "" and value is not None:
+            cookies[name] = value
+
+    headers = {
+        'referer': form_link,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                        'Chrome/104.0.5112.81 Safari/537.36 ',
+        'sec-ch-ua-platform': 'Windows',
+        'sec-ch-ua-mobile': '?0',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'origin': 'https://cafe.daum.net',
+        'dnt': '1',
+        'content-type': 'application/json',
+        'accept-language': 'ko,en-US;q=0.9,en;q=0.8',
+        'accept-enconding': 'gzip, deflate, br',
+        'accept': 'application/json, text/javascript, */*; q=0.01'
+    }
+
+    payload = [
+        {"questionId": 3200, "answer": name},
+        {"questionId": 3201, "answer": birthday},
+        {"questionId": 3202, "answer": phone_number},
+    ]
+
+    request_link = f"https://cafe.daum.net/_c21_/api/apply/article/{cafe_id}/{board_id}"
+
+    request_start_time = time.time()
+    r = requests.post(request_link, cookies=cookies,
+                        headers=headers, json=payload)
+    request_end_time = time.time()
+
+    if r.status_code == 200:
+        print(f"Form post request performance: {request_end_time - request_start_time} seconds, response returned at {datetime.fromtimestamp(request_end_time).strftime('%H:%M:%S.%f')}")
+        result = r.json()
+        timestamp = result.get('config', {}).get('regDate', 0)
+        converted_timestamp = datetime.fromtimestamp(timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S.%f')
+        print(f"Timestamp from response: {converted_timestamp}")
+
+        return True
+    else:
+        print(f"Error code: {r.status_code}")
+
+
+
+def comment_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, debug: bool, sec: bool):
     kid, kpw = login_info
     name, birthday, phone_number = user_info
     cafe_id = get_grp_id(cafe_link)
@@ -260,6 +313,54 @@ def main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, deb
 
     if result is True:
         print("Success. Check your comments.")
+        goto_url(d, f"{cafe_link}/{board_id}")
+    else:
+        print("Failure!")
+
+
+def form_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, exp_timestamp: int, threshold: int):
+    kid, kpw = login_info
+    name, birthday, phone_number = user_info
+    cafe_id = get_grp_id(cafe_link)
+
+    d = open_browser()
+
+    login(d, cafe_link, kid, kpw)
+    time.sleep(1)
+    goto_url(d, f"{cafe_link}/{board_id}")
+    d.implicitly_wait(3)
+
+    # Timestamp and threshold are in milliseconds!!!
+    execution_time = exp_timestamp - threshold
+    print(f"Start time: {datetime.fromtimestamp(exp_timestamp / 1000).strftime('%H:%M:%S.%f')}")
+    print(f"Threshold: {threshold} ms")
+    print(f"Expected execution time: {datetime.fromtimestamp(execution_time / 1000).strftime('%H:%M:%S.%f')}")
+
+
+    while True:
+        # Get time in milliseconds
+        current_time = time.time_ns() // 1000000
+        sys.stdout.write(f"\rCurrent time: {datetime.fromtimestamp(current_time / 1000).strftime('%H:%M:%S.%f')}")
+
+        if current_time >= execution_time:
+            result = participate_form(d, cafe_id, board_id, name, birthday, phone_number)
+            if result is True:
+                print("Success. Check your form.")
+                goto_url(d, f"{cafe_link}/{board_id}")
+            else:
+                print("Failure!")
+
+            break
+
+        sys.stdout.flush()
+        time.sleep(0.01)
+        
+
+
+    result = participate_form(d, cafe_id, board_id, name, birthday, phone_number)
+
+    if result is True:
+        print("Success. Check your form.")
         goto_url(d, f"{cafe_link}/{board_id}")
     else:
         print("Failure!")

@@ -1,4 +1,6 @@
 import requests
+import sys
+
 from post import get_grp_id
 
 
@@ -28,7 +30,7 @@ def get_cheer_id(cafe_link: str) -> int:
         return r.json()['cafe']['cheerWidgetId']
 
 
-def cheer_fan(cookies: dict, cafe_id: str, cheer_id: int, count: int):
+def cheer_fan(cafe_id: str, cheer_id: int, count: int) -> bool:
     req_url = f"https://fancafe-external-api.cafe.daum.net/fancafe/widget/cheer/{cafe_id}/{cheer_id}?count={count}"
 
     headers = {
@@ -47,9 +49,23 @@ def cheer_fan(cookies: dict, cafe_id: str, cheer_id: int, count: int):
         'accept': '*/*'
     }
 
-    r = requests.post(req_url, headers=headers, cookies=cookies)
+    r = requests.post(req_url, headers=headers)
     
     if r.status_code == 200:
-        print("Cheer Success!")
+        return True
     else:
-        print("Cheer Failed!")
+        print(f"Cheer Failed! - Status Code: {r.status_code}")
+        return False
+
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print('Invalid parameter')
+        sys.exit(1)
+    
+    cafe_link = sys.argv[1]
+    cafe_id = get_grp_id(cafe_link)
+    cheer_id = get_cheer_id(cafe_link)
+    result = cheer_fan(cafe_id, cheer_id, 1)
+
+    if result is True:
+        print("Cheer Success!")

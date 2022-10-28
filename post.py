@@ -378,7 +378,7 @@ if __name__ == '__main__':
     try:
         # comment_main(CAFE_URL, login_info, user_info, CAFE_BOARD_ID, debug=True, sec=False)
         update_time()
-        form_main(CAFE_URL, login_info, CAFE_BOARD_ID, question_ids, answers, 1666862100000, 150)
+        form_main(CAFE_URL, login_info, CAFE_BOARD_ID, question_ids, answers, 1667030400000, 150)
     except Exception as e:
         print(e)
         input("Press any key to exit...")

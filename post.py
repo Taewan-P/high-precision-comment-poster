@@ -60,7 +60,7 @@ def update_time(loc='time.google.com'):
             win32api.SetSystemTime(utc_timestamp.year, utc_timestamp.month, 0, utc_timestamp.day,
                                    utc_timestamp.hour, utc_timestamp.minute, utc_timestamp.second, 0)
 
-        # If OS is MacOS
+        # If OS is macOS
         elif os_name == 'darwin':
             os.system(f'sudo sntp -sS {loc}')
 
@@ -296,7 +296,9 @@ def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, qids: lis
 
         return True
     else:
-        print(f"Error code: {r.status_code}")
+        print(f"\nError code: {r.status_code}")
+        print(payload)
+        return False
 
 
 def comment_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, debug: bool, sec: bool):
@@ -357,17 +359,10 @@ def form_main(cafe_link: str, login_info: tuple, board_id: str, question_ids: li
                 return
             else:
                 print("Failure!")
-
-            break
+                return
 
         sys.stdout.flush()
         time.sleep(0.01)
-
-    if result is True:
-        print("Success. Check your form.")
-        goto_url(d, f"{cafe_link}/{board_id}")
-    else:
-        print("Failure!")
 
 
 if __name__ == '__main__':

@@ -45,7 +45,7 @@ def update_time(loc='time.google.com'):
     print("Updating system time from Stratum 1 NTP server...")
     os_name = sys.platform
     try:
-        # If OS is Windows
+        # If OS is Windows // Currently Not Working!!
         if os_name == 'win32':
             import win32api
 
@@ -239,8 +239,7 @@ def write_comment(d: webdriver.Chrome, cafe_id: str, board_id: str, token: str, 
     return False
 
 
-def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, my_name: str, birthday: str,
-                     phone_number: str) -> bool:
+def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, qids: list, ans: list) -> bool:
     form_link = f"https://cafe.daum.net/_c21_/founder_apply_format?grpid={cafe_id}&fldid={board_id}&type=new"
     cookies = {}
     for cookie in d.get_cookies():
@@ -267,11 +266,17 @@ def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, my_name: 
         'accept': 'application/json, text/javascript, */*; q=0.01'
     }
 
-    payload = [
-        {"questionId": 3220, "answer": my_name},
-        {"questionId": 3221, "answer": birthday},
-        {"questionId": 3222, "answer": phone_number},
-    ]
+    if len(qids) != len(ans):
+        print("Error: Question ID and Answers are not same length.")
+        return False
+
+    payload = []
+
+    for i in range(len(qids)):
+        payload.append({
+            "questionID": qids[i],
+            "answer": ans[i]
+        })
 
     request_link = f"https://cafe.daum.net/_c21_/api/apply/article/{cafe_id}/{board_id}"
 
@@ -322,7 +327,7 @@ def comment_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: 
         print("Failure!")
 
 
-def form_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str, exp_timestamp: int, threshold: int):
+def form_main(cafe_link: str, login_info: tuple, board_id: str, question_ids: list, answers: list, exp_timestamp: int, threshold: int):
     kid, kpw = login_info
     name, birthday, phone_number = user_info
     cafe_id = get_grp_id(cafe_link)
@@ -346,7 +351,7 @@ def form_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: str
         sys.stdout.write(f"\rCurrent time: {datetime.fromtimestamp(current_time / 1000).strftime('%H:%M:%S.%f')}")
 
         if current_time >= execution_time:
-            result = participate_form(d, cafe_id, board_id, name, birthday, phone_number)
+            result = participate_form(d, cafe_id, board_id, question_ids, answers)
             if result is True:
                 print("Success. Check your form.")
                 goto_url(d, f"{cafe_link}/{board_id}")
@@ -375,13 +380,13 @@ if __name__ == '__main__':
     CAFE_URL = secret['cafe']['url']
     CAFE_BOARD_ID = secret['cafe']['board']
     login_info = (secret['login']['id'], secret['login']['pw'])
-    user_info = (secret['info']['name'], secret['info']
-    ['birthday'], secret['info']['phone'])
+    question_ids = secret['form']['question_ids']
+    answers = secret['form']['answers']
 
     try:
         # comment_main(CAFE_URL, login_info, user_info, CAFE_BOARD_ID, debug=True, sec=False)
         update_time()
-        form_main(CAFE_URL, login_info, user_info, CAFE_BOARD_ID, 1666862100000, 150)
+        form_main(CAFE_URL, login_info, CAFE_BOARD_ID, question_ids, answers, 1666862100000, 150)
     except Exception as e:
         print(e)
         input("Press any key to exit...")

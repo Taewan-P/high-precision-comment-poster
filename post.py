@@ -329,7 +329,6 @@ def comment_main(cafe_link: str, login_info: tuple, user_info: tuple, board_id: 
 
 def form_main(cafe_link: str, login_info: tuple, board_id: str, question_ids: list, answers: list, exp_timestamp: int, threshold: int):
     kid, kpw = login_info
-    name, birthday, phone_number = user_info
     cafe_id = get_grp_id(cafe_link)
 
     d = open_browser()
@@ -363,8 +362,6 @@ def form_main(cafe_link: str, login_info: tuple, board_id: str, question_ids: li
 
         sys.stdout.flush()
         time.sleep(0.01)
-
-    result = participate_form(d, cafe_id, board_id, name, birthday, phone_number)
 
     if result is True:
         print("Success. Check your form.")

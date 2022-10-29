@@ -274,7 +274,7 @@ def participate_form(d: webdriver.Chrome, cafe_id: str, board_id: str, qids: lis
 
     for i in range(len(qids)):
         payload.append({
-            "questionID": qids[i],
+            "questionId": qids[i],
             "answer": ans[i]
         })
 
